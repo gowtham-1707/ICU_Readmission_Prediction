@@ -1,0 +1,69 @@
+
+version: "3.9"
+
+services:
+
+  # ── Full DVC pipeline ───────────────────────────────────────
+  pipeline:
+    build: .
+    image: icu-readmission:latest
+    container_name: icu_pipeline
+    volumes:
+      - .:/workspace
+      - ~/.config/gcloud:/root/.config/gcloud
+    environment:
+      - PYTHONPATH=/workspace
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+    command: dvc repro
+    mem_limit: 12g
+
+  # ── MLflow tracking server ──────────────────────────────────
+  mlflow:
+    image: python:3.11-slim
+    container_name: icu_mlflow
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "5000:5000"
+    command: >
+      bash -c "pip install mlflow -q &&
+               mlflow server
+               --host 0.0.0.0
+               --port 5000
+               --backend-store-uri sqlite:///mlruns/mlflow.db
+               --default-artifact-root ./mlartifacts"
+
+  # ── Run one DVC stage ───────────────────────────────────────
+  dvc:
+    build: .
+    image: icu-readmission:latest
+    container_name: icu_dvc
+    volumes:
+      - .:/workspace
+      - ~/.config/gcloud:/root/.config/gcloud
+    environment:
+      - PYTHONPATH=/workspace
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    entrypoint: ["dvc"]
+
+  # ── Jupyter for exploration ─────────────────────────────────
+  jupyter:
+    build: .
+    image: icu-readmission:latest
+    container_name: icu_jupyter
+    volumes:
+      - .:/workspace
+    ports:
+      - "8888:8888"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    command: >
+      bash -c "pip install jupyter -q &&
+               jupyter notebook --ip=0.0.0.0
+               --port=8888 --no-browser
+               --allow-root
+               --NotebookApp.token='icu2025'"
+    mem_limit: 12g

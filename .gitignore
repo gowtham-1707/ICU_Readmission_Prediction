@@ -1,0 +1,44 @@
+# ── DVC managed large files (not Git) ────────────────────────
+data/raw/
+data/processed/
+models/
+outputs/
+.ipynb
+
+# Keep .dvc pointer files (small — safe for Git)
+!data/raw/*.dvc
+!data/processed/*.dvc
+!models/*.dvc
+!outputs/*.dvc
+
+# ── MLflow ────────────────────────────────────────────────────
+mlruns/
+mlartifacts/
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+
+# ── Jupyter ───────────────────────────────────────────────────
+*.ipynb_checkpoints/
+
+# ── Docker ────────────────────────────────────────────────────
+.docker/
+
+# ── DVC internals ─────────────────────────────────────────────
+.dvc/tmp/
+.dvc/cache/
+
+# ── Google auth ───────────────────────────────────────────────
+gdrive_credentials.json
+.gauth/
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
