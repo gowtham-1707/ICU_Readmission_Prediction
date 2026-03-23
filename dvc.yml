@@ -1,0 +1,114 @@
+stages:
+
+  # ── Stage 1: Data Preparation ──────────────────────────────
+  data_prep:
+    cmd: python src/phase1_data_prep.py
+    deps:
+      - src/phase1_data_prep.py
+      - data/raw/admissions.csv.gz
+      - data/raw/patients.csv.gz
+      - data/raw/icustays.csv.gz
+      - data/raw/diagnoses_icd.csv.gz
+      - data/raw/labevents.csv.gz
+      - data/raw/chartevents.csv.gz
+    outs:
+      - data/processed/mimic_modeling_ready.csv
+    desc: >
+      Load MIMIC-IV tables, build ICU cohort, define 30-day
+      readmission label, engineer features (vitals, labs,
+      Charlson index, demographics), save modeling-ready CSV.
+
+  # ── Stage 2: Baseline Models ───────────────────────────────
+  baseline_models:
+    cmd: python src/phase2_baseline_models.py
+    deps:
+      - src/phase2_baseline_models.py
+      - data/processed/mimic_modeling_ready.csv
+      - params.yaml
+    outs:
+      - models/model_lr.pkl
+      - models/model_lasso.pkl
+      - models/model_ridge.pkl
+      - models/mice_imputer.pkl
+      - models/standard_scaler.pkl
+      - outputs/phase2_test_predictions.csv
+    metrics:
+      - outputs/metrics_baseline.json:
+          cache: false
+    plots:
+      - outputs/phase2_roc_pr_curves.png:
+          cache: false
+      - outputs/phase2_calibration.png:
+          cache: false
+      - outputs/phase2_lasso_features.png:
+          cache: false
+    desc: >
+      Patient-level StratifiedGroupKFold split. MICE + scaler
+      fit on train only. Train LR, LASSO, Ridge.
+      Evaluate AUC/PR-AUC/F1/Brier with 95% bootstrap CIs.
+      Log all params + metrics to MLflow.
+
+  # ── Stage 3: ML Models ─────────────────────────────────────
+  ml_models:
+    cmd: python src/phase3_ml_models.py
+    deps:
+      - src/phase3_ml_models.py
+      - data/processed/mimic_modeling_ready.csv
+      - models/mice_imputer.pkl
+      - models/standard_scaler.pkl
+      - params.yaml
+    outs:
+      - models/model_rf.pkl
+      - models/model_xgb.pkl
+      - models/model_mlp.pkl
+      - outputs/phase3_test_predictions.csv
+    metrics:
+      - outputs/metrics_ml.json:
+          cache: false
+    plots:
+      - outputs/phase3_roc_pr_curves.png:
+          cache: false
+      - outputs/phase3_calibration.png:
+          cache: false
+    desc: >
+      Reuse same split + preprocessors from Phase 2.
+      Train RF, XGBoost, MLP. Evaluate + log to MLflow.
+
+  # ── Stage 4: Interpretability ──────────────────────────────
+  interpretability:
+    cmd: python src/phase4_shap.py
+    deps:
+      - src/phase4_shap.py
+      - models/model_xgb.pkl
+      - models/mice_imputer.pkl
+      - models/standard_scaler.pkl
+      - data/processed/mimic_modeling_ready.csv
+    outs:
+      - outputs/shap_summary_plot.png
+      - outputs/shap_bar_plot.png
+      - outputs/shap_dependence_plots.png
+      - outputs/shap_values.csv
+    desc: >
+      SHAP TreeExplainer on XGBoost. Summary + dependence
+      plots. Log SHAP artifact to MLflow.
+
+  # ── Stage 5: Consolidate Results ───────────────────────────
+  consolidate_results:
+    cmd: python src/phase5_consolidate.py
+    deps:
+      - src/phase5_consolidate.py
+      - outputs/phase2_test_predictions.csv
+      - outputs/phase3_test_predictions.csv
+    metrics:
+      - outputs/final_metrics.json:
+          cache: false
+    plots:
+      - outputs/final_calibration_plot.png:
+          cache: false
+      - outputs/final_roc_plot.png:
+          cache: false
+    desc: >
+      Merge all predictions. Generate final results table
+      and calibration plot from SAME predictions — guarantees
+      p.15 and p.17 of report are always consistent.
+      Log final comparison table to MLflow.
