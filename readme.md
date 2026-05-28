@@ -10,6 +10,7 @@
 ```
 icu-readmission/
 ├── src/
+│   ├── Final.ipynb                # Final notebook analysis and results
 │   ├── phase1_data_prep.py        # MIMIC-IV feature engineering
 │   ├── phase2_baseline_models.py  # LR, LASSO, Ridge
 │   ├── phase3_ml_models.py        # RF, XGBoost, MLP
@@ -17,14 +18,14 @@ icu-readmission/
 │   └── phase5_consolidate.py      # Final results table
 ├── data/
 │   ├── raw/                       # MIMIC-IV files (DVC)
-│   └── processed/                 # modeling_ready.csv (DVC)
+│   └── processed/                 # mimic_modeling_ready.csv (DVC)
 ├── models/                        # Trained .pkl files (DVC)
 ├── outputs/                       # Plots, tables (DVC)
 ├── Dockerfile                     # Frozen Python environment
 ├── docker-compose.yml             # Easy container management
-├── dvc.yaml                       # Pipeline definition
-├── params.yaml                    # All tunable parameters
-└── requirements.txt               # Pinned dependencies
+├── dvc.yml                        # Pipeline definition
+├── params.yml                     # All tunable parameters
+└── requirement.txt                # Pinned dependencies
 ```
 
 ## Reproduce This Project (3 steps)
@@ -47,6 +48,15 @@ docker-compose up pipeline
 # OR run one stage:
 docker-compose run dvc repro baseline_models
 ```
+
+## Final Notebook Workflow
+
+The final analysis and evaluation are contained in `src/Final.ipynb`. This notebook:
+- loads the cleaned `features.csv` dataset,
+- exports `mimic_modeling_ready.csv`,
+- trains baseline and ML models,
+- computes SHAP explanations for XGBoost,
+- saves plots and final summary tables.
 
 ## First-Time Setup (for Gowtham only)
 
@@ -80,7 +90,9 @@ git commit -m "Add Google Drive DVC remote"
 Move your files:
   phase1_complete.py          → src/phase1_data_prep.py
   phase2_baseline_models.py   → src/phase2_baseline_models.py
+  Final.ipynb                 → src/Final.ipynb
   admissions.csv.gz etc.      → data/raw/
+  features.csv                → data/raw/ or notebook input directory
   mimic_modeling_ready.csv    → data/processed/
   *.pkl                       → models/
   *.png, *.csv results        → outputs/
@@ -180,14 +192,14 @@ data/raw/ ──→ [data_prep] ──→ data/processed/
                     outputs/final_*.png/.csv
 ```
 
-## Key Results (from report)
+## Final Outputs
 
-| Model | AUC (95% CI) | Brier | F1 |
-|---|---|---|---|
-| XGBoost | 0.763 (0.752–0.775) | 0.097 | 0.422 |
-| Random Forest | 0.760 (0.748–0.771) | 0.098 | 0.419 |
-| Logistic Regression | 0.758 (0.747–0.769) | 0.191 | 0.238 |
-| Neural Network | 0.731 (0.718–0.744) | 0.105 | 0.384 |
+The final notebook saves evaluation results and plots to the project directory, including:
+- `phase2_test_predictions.csv`, `phase3_test_predictions.csv`
+- `metrics_baseline.json`, `metrics_ml.json`, `final_results_table.csv`, `final_metrics.json`
+- `phase2_roc_pr_curves.png`, `phase2_calibration.png`, `phase2_lasso_features.png`
+- `phase3_roc_pr_curves.png`, `phase3_calibration.png`, `phase3_xgb_features.png`
+- `final_roc_plot.png`, `final_calibration_plot.png`, `shap_summary_plot.png`, `shap_bar_plot.png`, `shap_dependence_plots.png`
 
 ## Dataset
 MIMIC-IV v2.2 (PhysioNet) — requires credentialed access.
