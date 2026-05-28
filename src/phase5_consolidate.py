@@ -1,9 +1,14 @@
-import os, json, warnings, yaml
+import os, sys, json, warnings, yaml
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import mlflow
 warnings.filterwarnings("ignore")
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 from sklearn.metrics import (
     roc_auc_score, average_precision_score, f1_score,
@@ -13,7 +18,7 @@ from sklearn.metrics import (
 from sklearn.calibration import calibration_curve
 
 # ── CONFIG ───────────────────────────────────────────────────
-with open("params.yaml") as f:
+with open("params.yml") as f:
     params = yaml.safe_load(f)
 
 P           = params

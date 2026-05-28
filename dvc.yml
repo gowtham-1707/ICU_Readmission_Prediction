@@ -24,7 +24,7 @@ stages:
     deps:
       - src/phase2_baseline_models.py
       - data/processed/mimic_modeling_ready.csv
-      - params.yaml
+      - params.yml
     outs:
       - models/model_lr.pkl
       - models/model_lasso.pkl
@@ -56,7 +56,7 @@ stages:
       - data/processed/mimic_modeling_ready.csv
       - models/mice_imputer.pkl
       - models/standard_scaler.pkl
-      - params.yaml
+      - params.yml
     outs:
       - models/model_rf.pkl
       - models/model_xgb.pkl

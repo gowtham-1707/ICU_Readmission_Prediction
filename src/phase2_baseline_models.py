@@ -1,5 +1,5 @@
 
-import os, json, warnings, yaml
+import os, sys, json, warnings, yaml
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +7,11 @@ import joblib
 import mlflow
 import mlflow.sklearn
 warnings.filterwarnings("ignore")
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.model_selection import StratifiedGroupKFold
@@ -21,7 +26,7 @@ from sklearn.metrics import (
 from sklearn.calibration import calibration_curve
 
 # ── CONFIG ───────────────────────────────────────────────────
-with open("params.yaml") as f:
+with open("params.yml") as f:
     params = yaml.safe_load(f)
 
 P           = params

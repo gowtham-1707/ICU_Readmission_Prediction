@@ -1,12 +1,18 @@
 
 import os
+import sys
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import yaml
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # ── CONFIG ───────────────────────────────────────────────────
-with open("params.yaml") as f:
+with open("params.yml") as f:
     params = yaml.safe_load(f)
 
 MIMIC_DIR   = "data/raw"
